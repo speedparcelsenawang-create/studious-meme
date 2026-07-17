@@ -1,0 +1,2 @@
+- [Baileys WhatsApp session persistence](baileys-session-persistence.md) — local `.baileys_auth` session dir risks being wiped on Autoscale deploys; matters for any WhatsApp-bot-on-Replit project.
+- [Partial-update PUT routes and hasOwnProperty](partial-update-hasownproperty.md) — building `{key: cond ? val : undefined}` still defines the key, breaking "only present fields required" validation logic.
