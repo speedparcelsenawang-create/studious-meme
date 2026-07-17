@@ -26,13 +26,10 @@ const targetTypeInput = document.getElementById('targetType');
 const targetValueField = document.getElementById('targetValueField');
 const targetValueLabel = document.getElementById('targetValueLabel');
 const targetHint = document.getElementById('targetHint');
-const groupTools = document.getElementById('groupTools');
-const groupPicker = document.getElementById('groupPicker');
-const groupFetchHint = document.getElementById('groupFetchHint');
+const targetValueInput = document.getElementById('targetValue');
+const targetValueGroupSuggestions = document.getElementById('targetValueGroupSuggestions');
+const targetValuePersonalSuggestions = document.getElementById('targetValuePersonalSuggestions');
 const refreshGroupsBtn = document.getElementById('refreshGroupsBtn');
-const personalChatTools = document.getElementById('personalChatTools');
-const personalChatPicker = document.getElementById('personalChatPicker');
-const personalChatFetchHint = document.getElementById('personalChatFetchHint');
 const refreshPersonalChatsBtn = document.getElementById('refreshPersonalChatsBtn');
 const waStatus = document.getElementById('wa-status');
 const waConnectedWrap = document.getElementById('wa-connected-wrap');
@@ -85,13 +82,9 @@ const sendMediaUploadField = document.getElementById('sendMediaUploadField');
 const sendMediaUploadInput = document.getElementById('sendMediaUpload');
 const sendFileNameField = document.getElementById('sendFileNameField');
 const sendFileNameInput = document.getElementById('sendFileName');
-const sendGroupTools = document.getElementById('sendGroupTools');
-const sendGroupPicker = document.getElementById('sendGroupPicker');
-const sendGroupFetchHint = document.getElementById('sendGroupFetchHint');
+const sendTargetValueGroupSuggestions = document.getElementById('sendTargetValueGroupSuggestions');
+const sendTargetValuePersonalSuggestions = document.getElementById('sendTargetValuePersonalSuggestions');
 const sendRefreshGroupsBtn = document.getElementById('sendRefreshGroupsBtn');
-const sendPersonalChatTools = document.getElementById('sendPersonalChatTools');
-const sendPersonalChatPicker = document.getElementById('sendPersonalChatPicker');
-const sendPersonalChatFetchHint = document.getElementById('sendPersonalChatFetchHint');
 const sendRefreshPersonalChatsBtn = document.getElementById('sendRefreshPersonalChatsBtn');
 const commandTabCreate = document.getElementById('commandTabCreate');
 const commandTabList = document.getElementById('commandTabList');
@@ -2608,98 +2601,94 @@ async function refreshWhatsAppState() {
 }
 
 function setGroupHint(text, color = '#5d645d') {
-  if (!groupFetchHint) return;
-  groupFetchHint.textContent = text;
-  groupFetchHint.style.color = color;
+  if (!targetHint) return;
+  targetHint.textContent = text;
+  targetHint.style.color = color;
 }
 
 function setSendGroupHint(text, color = '#5d645d') {
-  if (!sendGroupFetchHint) return;
-  sendGroupFetchHint.textContent = text;
-  sendGroupFetchHint.style.color = color;
-}
-
-function setGroupPickerOptions(groups) {
-  if (!groupPicker) return;
-
-  const baseOption = '<option value="">Select a group...</option>';
-  const optionHtml = groups
-    .map((group) => {
-      const safeId = String(group.id || '').replace(/"/g, '&quot;');
-      const safeName = String(group.name || 'Untitled');
-      return `<option value="${safeId}">${safeName}</option>`;
-    })
-    .join('');
-
-  groupPicker.innerHTML = baseOption + optionHtml;
-}
-
-function setSendGroupPickerOptions(groups) {
-  if (!sendGroupPicker) return;
-
-  const baseOption = '<option value="">Select a group...</option>';
-  const optionHtml = groups
-    .map((group) => {
-      const safeId = String(group.id || '').replace(/"/g, '&quot;');
-      const safeName = String(group.name || 'Untitled');
-      return `<option value="${safeId}">${safeName}</option>`;
-    })
-    .join('');
-
-  sendGroupPicker.innerHTML = baseOption + optionHtml;
+  if (!sendTargetHint) return;
+  sendTargetHint.textContent = text;
+  sendTargetHint.style.color = color;
 }
 
 function setPersonalChatHint(text, color = '#5d645d') {
-  if (!personalChatFetchHint) return;
-  personalChatFetchHint.textContent = text;
-  personalChatFetchHint.style.color = color;
+  if (!targetHint) return;
+  targetHint.textContent = text;
+  targetHint.style.color = color;
 }
 
 function setSendPersonalChatHint(text, color = '#5d645d') {
-  if (!sendPersonalChatFetchHint) return;
-  sendPersonalChatFetchHint.textContent = text;
-  sendPersonalChatFetchHint.style.color = color;
+  if (!sendTargetHint) return;
+  sendTargetHint.textContent = text;
+  sendTargetHint.style.color = color;
+}
+
+const targetGroupSuggestionMap = new Map();
+const targetPersonalSuggestionMap = new Map();
+const sendTargetGroupSuggestionMap = new Map();
+const sendTargetPersonalSuggestionMap = new Map();
+
+function fillTargetSuggestions(datalistEl, map, items) {
+  map.clear();
+  if (!datalistEl) return;
+
+  const optionHtml = items
+    .map(({ id, label }) => {
+      const display = `${label} — ${id}`;
+      map.set(display, id);
+      const safeDisplay = display.replace(/"/g, '&quot;');
+      return `<option value="${safeDisplay}"></option>`;
+    })
+    .join('');
+
+  datalistEl.innerHTML = optionHtml;
+}
+
+function setGroupPickerOptions(groups) {
+  fillTargetSuggestions(
+    targetValueGroupSuggestions,
+    targetGroupSuggestionMap,
+    groups.map((group) => ({ id: String(group.id || ''), label: String(group.name || 'Untitled') }))
+  );
+}
+
+function setSendGroupPickerOptions(groups) {
+  fillTargetSuggestions(
+    sendTargetValueGroupSuggestions,
+    sendTargetGroupSuggestionMap,
+    groups.map((group) => ({ id: String(group.id || ''), label: String(group.name || 'Untitled') }))
+  );
 }
 
 function setPersonalChatPickerOptions(chats) {
-  if (!personalChatPicker) return;
-
-  const baseOption = '<option value="">Select a personal chat...</option>';
-  const optionHtml = chats
-    .map((chat) => {
-      const safeId = String(chat.id || '').replace(/"/g, '&quot;');
+  fillTargetSuggestions(
+    targetValuePersonalSuggestions,
+    targetPersonalSuggestionMap,
+    chats.map((chat) => {
       const safeName = String(chat.name || chat.phone || 'Unnamed');
       const safePhone = String(chat.phone || '').trim();
-      const label = safePhone ? `${safeName} (${safePhone})` : safeName;
-      return `<option value="${safeId}">${label}</option>`;
+      return { id: String(chat.id || ''), label: safePhone ? `${safeName} (${safePhone})` : safeName };
     })
-    .join('');
-
-  personalChatPicker.innerHTML = baseOption + optionHtml;
+  );
 }
 
 function setSendPersonalChatPickerOptions(chats) {
-  if (!sendPersonalChatPicker) return;
-
-  const baseOption = '<option value="">Select a personal chat...</option>';
-  const optionHtml = chats
-    .map((chat) => {
-      const safeId = String(chat.id || '').replace(/"/g, '&quot;');
+  fillTargetSuggestions(
+    sendTargetValuePersonalSuggestions,
+    sendTargetPersonalSuggestionMap,
+    chats.map((chat) => {
       const safeName = String(chat.name || chat.phone || 'Unnamed');
       const safePhone = String(chat.phone || '').trim();
-      const label = safePhone ? `${safeName} (${safePhone})` : safeName;
-      return `<option value="${safeId}">${label}</option>`;
+      return { id: String(chat.id || ''), label: safePhone ? `${safeName} (${safePhone})` : safeName };
     })
-    .join('');
-
-  sendPersonalChatPicker.innerHTML = baseOption + optionHtml;
+  );
 }
 
 async function loadPersonalChats(force = false) {
-  if (!personalChatPicker) return;
+  if (!targetValuePersonalSuggestions) return;
   if (hasLoadedPersonalChats && !force) return;
 
-  personalChatPicker.disabled = true;
   if (refreshPersonalChatsBtn) setButtonLoading(refreshPersonalChatsBtn, true, 'Refreshing chats');
   setPersonalChatHint('Fetching personal chat list...', '#5d645d');
 
@@ -2716,15 +2705,14 @@ async function loadPersonalChats(force = false) {
     hasLoadedPersonalChats = true;
 
     if (chats.length) {
-      setPersonalChatHint('Select a chat to auto-fill the destination ID.', '#5d645d');
+      setPersonalChatHint('Type an ID, or pick a suggestion below to auto-fill it.', '#5d645d');
     } else {
-      setPersonalChatHint('No personal chats found on this account.', '#9f4f03');
+      setPersonalChatHint('No personal chats found on this account. Type the ID manually.', '#9f4f03');
     }
   } catch (error) {
     setPersonalChatPickerOptions([]);
     setPersonalChatHint(error.message, '#b42318');
   } finally {
-    personalChatPicker.disabled = false;
     if (refreshPersonalChatsBtn) {
       setButtonLoading(refreshPersonalChatsBtn, false);
       refreshPersonalChatsBtn.disabled = false;
@@ -2733,10 +2721,9 @@ async function loadPersonalChats(force = false) {
 }
 
 async function loadSendPersonalChats(force = false) {
-  if (!sendPersonalChatPicker) return;
+  if (!sendTargetValuePersonalSuggestions) return;
   if (hasLoadedSendPersonalChats && !force) return;
 
-  sendPersonalChatPicker.disabled = true;
   if (sendRefreshPersonalChatsBtn) {
     setButtonLoading(sendRefreshPersonalChatsBtn, true, 'Refreshing chats');
   }
@@ -2755,15 +2742,14 @@ async function loadSendPersonalChats(force = false) {
     hasLoadedSendPersonalChats = true;
 
     if (chats.length) {
-      setSendPersonalChatHint('Select a chat to auto-fill the destination ID.', '#5d645d');
+      setSendPersonalChatHint('Type an ID, or pick a suggestion below to auto-fill it.', '#5d645d');
     } else {
-      setSendPersonalChatHint('No personal chats found on this account.', '#9f4f03');
+      setSendPersonalChatHint('No personal chats found on this account. Type the ID manually.', '#9f4f03');
     }
   } catch (error) {
     setSendPersonalChatPickerOptions([]);
     setSendPersonalChatHint(error.message, '#b42318');
   } finally {
-    sendPersonalChatPicker.disabled = false;
     if (sendRefreshPersonalChatsBtn) {
       setButtonLoading(sendRefreshPersonalChatsBtn, false);
       sendRefreshPersonalChatsBtn.disabled = false;
@@ -2772,10 +2758,9 @@ async function loadSendPersonalChats(force = false) {
 }
 
 async function loadGroups(force = false) {
-  if (!groupPicker) return;
+  if (!targetValueGroupSuggestions) return;
   if (hasLoadedGroups && !force) return;
 
-  groupPicker.disabled = true;
   if (refreshGroupsBtn) setButtonLoading(refreshGroupsBtn, true, 'Refreshing groups');
   setGroupHint('Fetching group list...', '#5d645d');
 
@@ -2792,15 +2777,14 @@ async function loadGroups(force = false) {
     hasLoadedGroups = true;
 
     if (groups.length) {
-      setGroupHint('Select a group to auto-fill the ID.', '#5d645d');
+      setGroupHint('Type an ID, or pick a suggestion below to auto-fill it.', '#5d645d');
     } else {
-      setGroupHint('No groups found on this account.', '#9f4f03');
+      setGroupHint('No groups found on this account. Type the group ID manually.', '#9f4f03');
     }
   } catch (error) {
     setGroupPickerOptions([]);
     setGroupHint(error.message, '#b42318');
   } finally {
-    groupPicker.disabled = false;
     if (refreshGroupsBtn) {
       setButtonLoading(refreshGroupsBtn, false);
       refreshGroupsBtn.disabled = false;
@@ -2809,10 +2793,9 @@ async function loadGroups(force = false) {
 }
 
 async function loadSendGroups(force = false) {
-  if (!sendGroupPicker) return;
+  if (!sendTargetValueGroupSuggestions) return;
   if (hasLoadedSendGroups && !force) return;
 
-  sendGroupPicker.disabled = true;
   if (sendRefreshGroupsBtn) setButtonLoading(sendRefreshGroupsBtn, true, 'Refreshing groups');
   setSendGroupHint('Fetching group list...', '#5d645d');
 
@@ -2829,15 +2812,14 @@ async function loadSendGroups(force = false) {
     hasLoadedSendGroups = true;
 
     if (groups.length) {
-      setSendGroupHint('Select a group to auto-fill the ID.', '#5d645d');
+      setSendGroupHint('Type an ID, or pick a suggestion below to auto-fill it.', '#5d645d');
     } else {
-      setSendGroupHint('No groups found on this account.', '#9f4f03');
+      setSendGroupHint('No groups found on this account. Type the group ID manually.', '#9f4f03');
     }
   } catch (error) {
     setSendGroupPickerOptions([]);
     setSendGroupHint(error.message, '#b42318');
   } finally {
-    sendGroupPicker.disabled = false;
     if (sendRefreshGroupsBtn) {
       setButtonLoading(sendRefreshGroupsBtn, false);
       sendRefreshGroupsBtn.disabled = false;
@@ -2845,12 +2827,19 @@ async function loadSendGroups(force = false) {
   }
 }
 
+function normalizeTargetValueInput(inputEl, isGroupTypeFn, groupMap, personalMap) {
+  if (!inputEl) return;
+  const map = isGroupTypeFn() ? groupMap : personalMap;
+  const current = inputEl.value;
+  if (map.has(current)) {
+    inputEl.value = map.get(current);
+  }
+}
+
 function syncTargetInputContent() {
   if (!targetTypeInput || !targetValueLabel || !targetHint || !targetValueField) return;
 
   if (scheduleTargetStep?.hidden) {
-    if (groupTools) groupTools.hidden = true;
-    if (personalChatTools) personalChatTools.hidden = true;
     return;
   }
 
@@ -2858,8 +2847,9 @@ function syncTargetInputContent() {
     targetValueField.hidden = false;
     targetValueLabel.textContent = 'Group ID (example: 1203630xxxx@g.us)';
     targetHint.textContent = 'You can enter 1203630xxxx only or with @g.us suffix';
-    if (groupTools) groupTools.hidden = false;
-    if (personalChatTools) personalChatTools.hidden = true;
+    if (targetValueInput) targetValueInput.setAttribute('list', 'targetValueGroupSuggestions');
+    if (refreshGroupsBtn) refreshGroupsBtn.hidden = false;
+    if (refreshPersonalChatsBtn) refreshPersonalChatsBtn.hidden = true;
     loadGroups();
     return;
   }
@@ -2867,8 +2857,9 @@ function syncTargetInputContent() {
   targetValueField.hidden = false;
   targetValueLabel.textContent = 'Personal ID / Number (example: 62812xxxx@s.whatsapp.net)';
   targetHint.textContent = 'You can enter phone number only or with @s.whatsapp.net suffix';
-  if (groupTools) groupTools.hidden = true;
-  if (personalChatTools) personalChatTools.hidden = false;
+  if (targetValueInput) targetValueInput.setAttribute('list', 'targetValuePersonalSuggestions');
+  if (refreshGroupsBtn) refreshGroupsBtn.hidden = true;
+  if (refreshPersonalChatsBtn) refreshPersonalChatsBtn.hidden = false;
   loadPersonalChats();
 }
 
@@ -2879,8 +2870,9 @@ function syncSendTargetInputContent() {
     sendTargetValueField.hidden = false;
     sendTargetValueLabel.textContent = 'Group ID (example: 1203630xxxx@g.us)';
     sendTargetHint.textContent = 'You can enter 1203630xxxx only or with @g.us suffix';
-    if (sendGroupTools) sendGroupTools.hidden = false;
-    if (sendPersonalChatTools) sendPersonalChatTools.hidden = true;
+    if (sendTargetValueInput) sendTargetValueInput.setAttribute('list', 'sendTargetValueGroupSuggestions');
+    if (sendRefreshGroupsBtn) sendRefreshGroupsBtn.hidden = false;
+    if (sendRefreshPersonalChatsBtn) sendRefreshPersonalChatsBtn.hidden = true;
     loadSendGroups();
     return;
   }
@@ -2888,8 +2880,9 @@ function syncSendTargetInputContent() {
   sendTargetValueField.hidden = false;
   sendTargetValueLabel.textContent = 'Personal ID / Number (example: 62812xxxx@s.whatsapp.net)';
   sendTargetHint.textContent = 'You can enter phone number only or with @s.whatsapp.net suffix';
-  if (sendGroupTools) sendGroupTools.hidden = true;
-  if (sendPersonalChatTools) sendPersonalChatTools.hidden = false;
+  if (sendTargetValueInput) sendTargetValueInput.setAttribute('list', 'sendTargetValuePersonalSuggestions');
+  if (sendRefreshGroupsBtn) sendRefreshGroupsBtn.hidden = true;
+  if (sendRefreshPersonalChatsBtn) sendRefreshPersonalChatsBtn.hidden = false;
   loadSendPersonalChats();
 }
 
@@ -2932,37 +2925,25 @@ if (navItems.length) {
   });
 }
 
-if (groupPicker) {
-  groupPicker.addEventListener('change', () => {
-    const selected = String(groupPicker.value || '').trim();
-    const targetValueInput = document.getElementById('targetValue');
-    if (!targetValueInput || !selected) return;
-    targetValueInput.value = selected;
+if (targetValueInput) {
+  targetValueInput.addEventListener('input', () => {
+    normalizeTargetValueInput(
+      targetValueInput,
+      () => !targetTypeInput || targetTypeInput.value === 'group',
+      targetGroupSuggestionMap,
+      targetPersonalSuggestionMap
+    );
   });
 }
 
-if (personalChatPicker) {
-  personalChatPicker.addEventListener('change', () => {
-    const selected = String(personalChatPicker.value || '').trim();
-    const targetValueInput = document.getElementById('targetValue');
-    if (!targetValueInput || !selected) return;
-    targetValueInput.value = selected;
-  });
-}
-
-if (sendGroupPicker) {
-  sendGroupPicker.addEventListener('change', () => {
-    const selected = String(sendGroupPicker.value || '').trim();
-    if (!sendTargetValueInput || !selected) return;
-    sendTargetValueInput.value = selected;
-  });
-}
-
-if (sendPersonalChatPicker) {
-  sendPersonalChatPicker.addEventListener('change', () => {
-    const selected = String(sendPersonalChatPicker.value || '').trim();
-    if (!sendTargetValueInput || !selected) return;
-    sendTargetValueInput.value = selected;
+if (sendTargetValueInput) {
+  sendTargetValueInput.addEventListener('input', () => {
+    normalizeTargetValueInput(
+      sendTargetValueInput,
+      () => !sendTargetTypeInput || sendTargetTypeInput.value === 'group',
+      sendTargetGroupSuggestionMap,
+      sendTargetPersonalSuggestionMap
+    );
   });
 }
 
@@ -5855,7 +5836,10 @@ updateCommandFormFlow();
 // ── OSINT Panel ────────────────────────────────────────────────────────────
 
 (function initOsintPanel() {
-  const tabs = Array.from(document.querySelectorAll('.osint-tab'));
+  const tabs = Array.from(document.querySelectorAll('.osint-section-tab'));
+  const dropdownTrigger = document.getElementById('osintSectionDropdownTrigger');
+  const dropdownLabel = document.getElementById('osintSectionDropdownLabel');
+  const dropdownNav = document.getElementById('osintSectionNav');
   const panels = {
     'wa-lookup': document.getElementById('osint-wa-lookup'),
     'phone-info': document.getElementById('osint-phone-info'),
@@ -5864,15 +5848,45 @@ updateCommandFormFlow();
   };
 
   function showOsintTab(tab) {
-    tabs.forEach((t) => t.classList.toggle('active', t.dataset.osintTab === tab));
+    tabs.forEach((t) => {
+      const isActive = t.dataset.osintTab === tab;
+      t.classList.toggle('active', isActive);
+      t.setAttribute('aria-selected', String(isActive));
+      if (isActive && dropdownLabel) dropdownLabel.textContent = t.textContent;
+    });
     Object.keys(panels).forEach((key) => {
       if (panels[key]) panels[key].hidden = key !== tab;
     });
+    if (dropdownNav) dropdownNav.classList.remove('open');
+    if (dropdownTrigger) dropdownTrigger.setAttribute('aria-expanded', 'false');
   }
 
   tabs.forEach((tab) => {
     tab.addEventListener('click', () => showOsintTab(tab.dataset.osintTab));
   });
+
+  if (dropdownTrigger && dropdownNav) {
+    dropdownTrigger.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const isOpen = dropdownNav.classList.contains('open');
+      dropdownNav.classList.toggle('open', !isOpen);
+      dropdownTrigger.setAttribute('aria-expanded', String(!isOpen));
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!dropdownNav.classList.contains('open')) return;
+      if (dropdownNav.contains(event.target) || dropdownTrigger.contains(event.target)) return;
+      dropdownNav.classList.remove('open');
+      dropdownTrigger.setAttribute('aria-expanded', 'false');
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        dropdownNav.classList.remove('open');
+        dropdownTrigger.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
 
   // ── WA Lookup ──────────────────────────────────────────────────────────
 
@@ -6178,9 +6192,27 @@ updateCommandFormFlow();
 // ── Deleted Message Viewer Modal ───────────────────────────────────────────
 
 (function initDmViewModal() {
+  const AVATAR_COLORS = ['#f56b6b', '#f2a541', '#e0b93f', '#6bc46d', '#4db6ac', '#4fa8e0', '#7e8ce0', '#a76bd6', '#d66bb0'];
+
+  function getInitials(name) {
+    const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return '?';
+    const first = parts[0][0] || '';
+    const second = parts.length > 1 ? parts[1][0] : '';
+    return (first + second).toUpperCase();
+  }
+
+  function getAvatarColor(name) {
+    const str = String(name || '');
+    let hash = 0;
+    for (let i = 0; i < str.length; i += 1) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+  }
+
   function setupModal() {
     const backdrop = document.getElementById('dmViewModalBackdrop');
     const closeBtn = document.getElementById('dmViewModalClose');
+    const avatarEl = document.getElementById('dmViewModalAvatar');
     const titleEl = document.getElementById('dmViewModalTitle');
     const subtitleEl = document.getElementById('dmViewModalSubtitle');
     const bubbleWrap = document.getElementById('dmViewBubbleWrap');
@@ -6203,8 +6235,13 @@ updateCommandFormFlow();
       const deletedAt = btn.dataset.deletedAt || '';
 
     // Header
-    titleEl.textContent = isGroup ? `Group: ${chat}` : `Chat: ${chat}`;
+    titleEl.textContent = isGroup ? chat : chat || sender;
     subtitleEl.textContent = `Deleted by ${sender}`;
+    if (avatarEl) {
+      const avatarLabel = isGroup ? chat : sender;
+      avatarEl.textContent = getInitials(avatarLabel);
+      avatarEl.style.background = getAvatarColor(avatarLabel);
+    }
 
     // Build bubble
     bubbleWrap.innerHTML = '';
@@ -6285,13 +6322,13 @@ updateCommandFormFlow();
       bubble.appendChild(t);
     }
 
-    // Deleted notice
+    bubbleWrap.appendChild(bubble);
+
+    // Deleted notice — shown as a small chip below the bubble, like a system note
     const notice = document.createElement('div');
     notice.className = 'dm-bubble-deleted-notice';
     notice.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg> This message was deleted`;
-    bubble.appendChild(notice);
-
-    bubbleWrap.appendChild(bubble);
+    bubbleWrap.appendChild(notice);
 
     // Meta footer
     const rows = [

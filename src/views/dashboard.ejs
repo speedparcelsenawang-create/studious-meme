@@ -501,6 +501,7 @@
           </section>
 
           <section class="page" data-page="schedule" id="schedule" hidden>
+            <div class="form-shell">
             <div class="schedule-section-dropdown" id="scheduleSectionDropdown">
               <button type="button" class="schedule-section-dropdown-trigger" id="scheduleSectionDropdownTrigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="scheduleSectionNav">
                 <span id="scheduleSectionDropdownLabel">Create Schedule</span>
@@ -526,6 +527,7 @@
                 <div class="card-content">
                   <p id="shareScheduleLinkFeedback" class="feedback"></p>
                   <form id="schedule-form">
+                    <p class="form-section-label">Schedule</p>
                     <div class="field">
                       <label for="scheduleRepeatType">Repeat</label>
                       <select id="scheduleRepeatType" name="repeatType" required>
@@ -608,6 +610,8 @@
                     </div>
 
                     <div id="scheduleTargetStep" hidden>
+                      <hr class="form-divider" />
+                      <p class="form-section-label">Destination</p>
                       <div class="field">
                         <label for="targetType">Target Type</label>
                         <select id="targetType" name="targetType" required>
@@ -617,33 +621,21 @@
                       </div>
 
                       <div class="field" id="targetValueField">
-                        <label for="targetValue" id="targetValueLabel">Group ID (example: 1203630xxxx@g.us)</label>
-                        <input id="targetValue" name="targetValue" required />
+                        <div class="field-head">
+                          <label for="targetValue" id="targetValueLabel">Group ID (example: 1203630xxxx@g.us)</label>
+                          <div class="field-head-actions">
+                            <button type="button" class="btn btn-outline btn-sm" id="refreshGroupsBtn">Refresh Groups</button>
+                            <button type="button" class="btn btn-outline btn-sm" id="refreshPersonalChatsBtn" hidden>Refresh Chats</button>
+                          </div>
+                        </div>
+                        <input id="targetValue" name="targetValue" list="targetValueGroupSuggestions" autocomplete="off" placeholder="Type an ID, or search a name…" required />
+                        <datalist id="targetValueGroupSuggestions"></datalist>
+                        <datalist id="targetValuePersonalSuggestions"></datalist>
                         <p class="hint" id="targetHint">You can enter 1203630xxxx only or with @g.us suffix</p>
                       </div>
 
-                      <div class="group-tools" id="groupTools">
-                        <div class="group-tools-head">
-                          <label for="groupPicker">Select Group From WhatsApp Account</label>
-                          <button type="button" class="btn btn-outline btn-sm" id="refreshGroupsBtn">Refresh Groups</button>
-                        </div>
-                        <select id="groupPicker">
-                          <option value="">Loading group list...</option>
-                        </select>
-                        <p class="hint" id="groupFetchHint">Pick a group to auto-fill the ID.</p>
-                      </div>
-
-                      <div class="group-tools" id="personalChatTools">
-                        <div class="group-tools-head">
-                          <label for="personalChatPicker">Generate From Current Personal Chats</label>
-                          <button type="button" class="btn btn-outline btn-sm" id="refreshPersonalChatsBtn">Refresh Chats</button>
-                        </div>
-                        <select id="personalChatPicker">
-                          <option value="">Loading personal chat list...</option>
-                        </select>
-                        <p class="hint" id="personalChatFetchHint">Pick a personal chat to auto-fill the destination ID.</p>
-                      </div>
-
+                      <hr class="form-divider" />
+                      <p class="form-section-label">Message</p>
                       <div class="field">
                         <label for="message">Message</label>
                         <textarea id="message" name="message" rows="4" required></textarea>
@@ -655,6 +647,7 @@
                   <p id="form-feedback" class="feedback"></p>
                 </div>
               </article>
+            </div>
             </div>
 
             <div class="method-panel" id="schedule-list-panel" role="tabpanel" aria-labelledby="scheduleTabList" hidden>
@@ -733,14 +726,15 @@
           </section>
 
           <section class="page" data-page="send-message" id="send-message" hidden>
-            <div class="grid two-cols">
+            <div class="form-shell">
               <article class="card">
                 <div class="card-header">
                   <h2 class="card-title">Send Message</h2>
-                  <p class="card-description">Send WhatsApp message instantly from dashboard</p>
+                  <p class="card-description">Send a WhatsApp message instantly from the dashboard</p>
                 </div>
                 <div class="card-content">
                   <form id="send-form">
+                    <p class="form-section-label">Destination</p>
                     <div class="field">
                       <label for="sendTargetType">Target Type</label>
                       <select id="sendTargetType" name="targetType" required>
@@ -750,33 +744,21 @@
                     </div>
 
                     <div class="field" id="sendTargetValueField">
-                      <label for="sendTargetValue" id="sendTargetValueLabel">Group ID (example: 1203630xxxx@g.us)</label>
-                      <input id="sendTargetValue" name="targetValue" required />
+                      <div class="field-head">
+                        <label for="sendTargetValue" id="sendTargetValueLabel">Group ID (example: 1203630xxxx@g.us)</label>
+                        <div class="field-head-actions">
+                          <button type="button" class="btn btn-outline btn-sm" id="sendRefreshGroupsBtn">Refresh Groups</button>
+                          <button type="button" class="btn btn-outline btn-sm" id="sendRefreshPersonalChatsBtn" hidden>Refresh Chats</button>
+                        </div>
+                      </div>
+                      <input id="sendTargetValue" name="targetValue" list="sendTargetValueGroupSuggestions" autocomplete="off" placeholder="Type an ID, or search a name…" required />
+                      <datalist id="sendTargetValueGroupSuggestions"></datalist>
+                      <datalist id="sendTargetValuePersonalSuggestions"></datalist>
                       <p class="hint" id="sendTargetHint">You can enter 1203630xxxx only or with @g.us suffix</p>
                     </div>
 
-                    <div class="group-tools" id="sendGroupTools">
-                      <div class="group-tools-head">
-                        <label for="sendGroupPicker">Select Group From WhatsApp Account</label>
-                        <button type="button" class="btn btn-outline btn-sm" id="sendRefreshGroupsBtn">Refresh Groups</button>
-                      </div>
-                      <select id="sendGroupPicker">
-                        <option value="">Loading group list...</option>
-                      </select>
-                      <p class="hint" id="sendGroupFetchHint">Pick a group to auto-fill the ID.</p>
-                    </div>
-
-                    <div class="group-tools" id="sendPersonalChatTools" hidden>
-                      <div class="group-tools-head">
-                        <label for="sendPersonalChatPicker">Generate From Current Personal Chats</label>
-                        <button type="button" class="btn btn-outline btn-sm" id="sendRefreshPersonalChatsBtn">Refresh Chats</button>
-                      </div>
-                      <select id="sendPersonalChatPicker">
-                        <option value="">Loading personal chat list...</option>
-                      </select>
-                      <p class="hint" id="sendPersonalChatFetchHint">Pick a personal chat to auto-fill the destination ID.</p>
-                    </div>
-
+                    <hr class="form-divider" />
+                    <p class="form-section-label">Message</p>
                     <div class="field" id="sendMediaTypeField">
                       <label for="sendMediaType">Attach Media <span class="muted">(optional)</span></label>
                       <select id="sendMediaType" name="mediaType">
@@ -1066,7 +1048,7 @@
                               data-media-url="<%= item.mediaUrl || '' %>"
                               data-file-name="<%= item.fileName || '' %>"
                               data-mime="<%= item.mimeType || '' %>"
-                              data-sent-at="<%= item.originalTimestamp ? new Date(item.originalTimestamp * 1000).toISOString() : '' %>"
+                              data-sent-at="<%= item.originalTimestamp ? new Date(item.originalTimestamp).toISOString() : '' %>"
                               data-deleted-at="<%= item.deletedAt || '' %>">
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                             </button>
@@ -1085,11 +1067,19 @@
           </section>
 
           <section class="page" data-page="osint" id="osint" hidden>
-            <div class="osint-tabs-row" id="osintTabsRow">
-              <button type="button" class="osint-tab active" data-osint-tab="wa-lookup">WA Lookup</button>
-              <button type="button" class="osint-tab" data-osint-tab="phone-info">Phone Info</button>
-              <button type="button" class="osint-tab" data-osint-tab="group-info">Group Info</button>
-              <button type="button" class="osint-tab" data-osint-tab="ip-domain">IP / Domain</button>
+            <div class="osint-section-dropdown" id="osintSectionDropdown">
+              <button type="button" class="osint-section-dropdown-trigger" id="osintSectionDropdownTrigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="osintSectionNav">
+                <span id="osintSectionDropdownLabel">WA Lookup</span>
+                <svg class="account-settings-dropdown-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </button>
+              <nav class="osint-section-nav" id="osintSectionNav" role="listbox" aria-label="OSINT sections">
+                <button type="button" class="osint-section-tab active" data-osint-tab="wa-lookup" role="option" aria-selected="true">WA Lookup</button>
+                <button type="button" class="osint-section-tab" data-osint-tab="phone-info" role="option" aria-selected="false">Phone Info</button>
+                <button type="button" class="osint-section-tab" data-osint-tab="group-info" role="option" aria-selected="false">Group Info</button>
+                <button type="button" class="osint-section-tab" data-osint-tab="ip-domain" role="option" aria-selected="false">IP / Domain</button>
+              </nav>
             </div>
 
             <!-- WA Lookup Panel -->
@@ -1654,9 +1644,12 @@
     <div class="dm-view-modal-backdrop" id="dmViewModalBackdrop" hidden aria-modal="true" role="dialog" aria-labelledby="dmViewModalTitle">
       <div class="dm-view-modal">
         <div class="dm-view-modal-header">
-          <div class="dm-view-modal-meta">
-            <h3 class="dm-view-modal-title" id="dmViewModalTitle">Deleted Message</h3>
-            <p class="dm-view-modal-subtitle" id="dmViewModalSubtitle"></p>
+          <div class="dm-view-modal-identity">
+            <div class="dm-view-modal-avatar" id="dmViewModalAvatar" aria-hidden="true">?</div>
+            <div class="dm-view-modal-meta">
+              <h3 class="dm-view-modal-title" id="dmViewModalTitle">Deleted Message</h3>
+              <p class="dm-view-modal-subtitle" id="dmViewModalSubtitle"></p>
+            </div>
           </div>
           <button type="button" class="btn btn-ghost btn-sm" id="dmViewModalClose" aria-label="Close">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
