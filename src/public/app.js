@@ -29,8 +29,8 @@ const targetHint = document.getElementById('targetHint');
 const targetValueInput = document.getElementById('targetValue');
 const targetValueGroupSuggestions = document.getElementById('targetValueGroupSuggestions');
 const targetValuePersonalSuggestions = document.getElementById('targetValuePersonalSuggestions');
-const refreshGroupsBtn = document.getElementById('refreshGroupsBtn');
-const refreshPersonalChatsBtn = document.getElementById('refreshPersonalChatsBtn');
+const scheduleRefreshBtn = document.getElementById('scheduleRefreshBtn');
+const scheduleSelectChatBtn = document.getElementById('scheduleSelectChatBtn');
 const waStatus = document.getElementById('wa-status');
 const waConnectedWrap = document.getElementById('wa-connected-wrap');
 const waConnectedDetails = document.getElementById('waConnectedDetails');
@@ -84,8 +84,9 @@ const sendFileNameField = document.getElementById('sendFileNameField');
 const sendFileNameInput = document.getElementById('sendFileName');
 const sendTargetValueGroupSuggestions = document.getElementById('sendTargetValueGroupSuggestions');
 const sendTargetValuePersonalSuggestions = document.getElementById('sendTargetValuePersonalSuggestions');
-const sendRefreshGroupsBtn = document.getElementById('sendRefreshGroupsBtn');
-const sendRefreshPersonalChatsBtn = document.getElementById('sendRefreshPersonalChatsBtn');
+const sendRefreshBtn = document.getElementById('sendRefreshBtn');
+const sendSelectChatBtn = document.getElementById('sendSelectChatBtn');
+const sendTargetClearBtn = document.getElementById('sendTargetClearBtn');
 const commandTabCreate = document.getElementById('commandTabCreate');
 const commandTabList = document.getElementById('commandTabList');
 const commandCreatePanel = document.getElementById('command-create-panel');
@@ -99,6 +100,12 @@ const requestPairingBtn = document.getElementById('requestPairingBtn');
 const pairingFeedback = document.getElementById('pairing-feedback');
 const pairingCodeWrap = document.getElementById('pairing-code-wrap');
 const pairingCodeValue = document.getElementById('pairing-code-value');
+const chatSelectorModal = document.getElementById('chatSelectorModal');
+const closeChatSelectorModal = document.getElementById('closeChatSelectorModal');
+const chatSelectorList = document.getElementById('chatSelectorList');
+const chatSelectorFeedback = document.getElementById('chatSelectorFeedback');
+const chatSelectorModalTitle = document.getElementById('chatSelectorModalTitle');
+const chatSelectorModalDesc = document.getElementById('chatSelectorModalDesc');
 const accountTargetTips = document.getElementById('account-target-tips');
 const accountSettingsTabs = Array.from(document.querySelectorAll('.account-settings-tab[data-account-tab]'));
 const accountSettingsPanels = Array.from(document.querySelectorAll('.account-settings-panel[data-account-panel]'));
@@ -186,8 +193,8 @@ const THEME_STORAGE_KEY = 'schedulebot-theme';
 const ACCOUNT_PROFILE_STORAGE_KEY = 'schedulebot-account-profile';
 const TIMEZONE_STORAGE_KEY = 'schedulebot-timezone';
 const DEFAULT_CHAT_RESPONSE_SETTINGS = {
-  personalEnabled: true,
-  groupEnabled: true,
+  personalEnabled: false,
+  groupEnabled: false,
   selfCommandEnabled: true,
 };
 const DEFAULT_SCHEDULE_USAGE_HELP_TEXT = 'Usage:\n.schedule <time> | <message>\n\nExamples:\n.schedule 10m | Follow up pelanggan\n.schedule 2026-12-31 23:59 | Happy new year!\n\nTime format: 10m, 2h, 1d, atau YYYY-MM-DD HH:mm';
@@ -928,6 +935,103 @@ function syncModalBodyScrollLock() {
   document.body.style.overflow = hasVisibleModal ? 'hidden' : '';
 }
 
+let chatSelectorContext = null;
+
+function closeChatSelectorModalFn() {
+  if (chatSelectorModal) chatSelectorModal.hidden = true;
+  chatSelectorContext = null;
+  syncModalBodyScrollLock();
+}
+
+function renderChatSelectorList() {
+  if (!chatSelectorList || !chatSelectorContext) return;
+
+  const { targetTypeSelect, targetTypeInput, targetValueInput } = chatSelectorContext;
+  const isScheduleSection = targetTypeInput !== null;
+  const isGroup = targetTypeSelect?.value === 'group';
+
+  let datalist;
+  if (isScheduleSection) {
+    // Schedule section
+    datalist = isGroup 
+      ? document.getElementById('targetValueGroupSuggestions')
+      : document.getElementById('targetValuePersonalSuggestions');
+  } else {
+    // Send section
+    datalist = isGroup
+      ? document.getElementById('sendTargetValueGroupSuggestions')
+      : document.getElementById('sendTargetValuePersonalSuggestions');
+  }
+
+  if (!datalist) {
+    chatSelectorList.innerHTML = '';
+    return;
+  }
+
+  const options = Array.from(datalist.options);
+  chatSelectorList.innerHTML = '';
+
+  if (options.length === 0) {
+    chatSelectorList.innerHTML = `
+      <tr>
+        <td colspan="3" class="chat-selector-empty">No chats found. Click Refresh to load.</td>
+      </tr>
+    `;
+    return;
+  }
+
+  options.forEach((option) => {
+    const text = option.textContent || '';
+    const value = option.value || '';
+    const parts = text.split(/\s[-—]\s/);
+    const label = parts[0] || text;
+    const id = parts.slice(1).join(' - ') || value;
+
+    const item = document.createElement('tr');
+    item.className = 'chat-selector-row';
+    item.innerHTML = `
+      <td class="chat-selector-name">${escapeHtml(label)}</td>
+      <td class="chat-selector-id">${escapeHtml(id)}</td>
+      <td class="chat-selector-action-cell">
+        <button type="button" class="btn btn-outline btn-sm chat-selector-action">Select</button>
+      </td>
+    `;
+
+    const selectBtn = item.querySelector('.chat-selector-action');
+    const applySelection = () => {
+      if (targetValueInput) targetValueInput.value = id;
+      updateSendTargetClearButtonState();
+      closeChatSelectorModalFn();
+    };
+
+    item.addEventListener('click', applySelection);
+    selectBtn?.addEventListener('click', (event) => {
+      event.stopPropagation();
+      applySelection();
+    });
+    chatSelectorList.appendChild(item);
+  });
+}
+
+function updateSendTargetClearButtonState() {
+  if (!sendTargetClearBtn || !sendTargetValueInput) return;
+  sendTargetClearBtn.disabled = String(sendTargetValueInput.value || '').trim().length === 0;
+}
+
+function openChatSelectorModal(context) {
+  chatSelectorContext = context;
+  const { targetTypeSelect, targetTypeInput } = context;
+  const isGroup = !targetTypeSelect || targetTypeSelect.value === 'group';
+
+  if (chatSelectorModalTitle) chatSelectorModalTitle.textContent = isGroup ? 'Select Group' : 'Select Chat';
+  if (chatSelectorModalDesc) chatSelectorModalDesc.textContent = isGroup ? 'Choose a group to auto-fill' : 'Choose a personal chat to auto-fill';
+
+  renderChatSelectorList();
+
+  if (chatSelectorModal) chatSelectorModal.hidden = false;
+  syncModalBodyScrollLock();
+}
+
 function getConnectedAccountNameText() {
   const rawName = String(waConnectedName?.textContent || '').trim();
   if (!rawName || rawName === '-') return '';
@@ -1523,8 +1627,8 @@ function hydrateAccountProfileUI() {
 function normalizeChatResponseSettings(value) {
   const source = value && typeof value === 'object' ? value : {};
   return {
-    personalEnabled: source.personalEnabled !== false,
-    groupEnabled: source.groupEnabled !== false,
+    personalEnabled: source.personalEnabled === true,
+    groupEnabled: source.groupEnabled === true,
     selfCommandEnabled: source.selfCommandEnabled === true,
   };
 }
@@ -2635,7 +2739,7 @@ function fillTargetSuggestions(datalistEl, map, items) {
 
   const optionHtml = items
     .map(({ id, label }) => {
-      const display = `${label} — ${id}`;
+      const display = `${label} - ${id}`;
       map.set(display, id);
       const safeDisplay = display.replace(/"/g, '&quot;');
       return `<option value="${safeDisplay}"></option>`;
@@ -2667,8 +2771,7 @@ function setPersonalChatPickerOptions(chats) {
     targetPersonalSuggestionMap,
     chats.map((chat) => {
       const safeName = String(chat.name || chat.phone || 'Unnamed');
-      const safePhone = String(chat.phone || '').trim();
-      return { id: String(chat.id || ''), label: safePhone ? `${safeName} (${safePhone})` : safeName };
+      return { id: String(chat.id || ''), label: safeName };
     })
   );
 }
@@ -2679,8 +2782,7 @@ function setSendPersonalChatPickerOptions(chats) {
     sendTargetPersonalSuggestionMap,
     chats.map((chat) => {
       const safeName = String(chat.name || chat.phone || 'Unnamed');
-      const safePhone = String(chat.phone || '').trim();
-      return { id: String(chat.id || ''), label: safePhone ? `${safeName} (${safePhone})` : safeName };
+      return { id: String(chat.id || ''), label: safeName };
     })
   );
 }
@@ -2689,7 +2791,7 @@ async function loadPersonalChats(force = false) {
   if (!targetValuePersonalSuggestions) return;
   if (hasLoadedPersonalChats && !force) return;
 
-  if (refreshPersonalChatsBtn) setButtonLoading(refreshPersonalChatsBtn, true, 'Refreshing chats');
+  if (scheduleRefreshBtn) setButtonLoading(scheduleRefreshBtn, true, 'Refreshing chats');
   setPersonalChatHint('Fetching personal chat list...', '#5d645d');
 
   try {
@@ -2713,9 +2815,9 @@ async function loadPersonalChats(force = false) {
     setPersonalChatPickerOptions([]);
     setPersonalChatHint(error.message, '#b42318');
   } finally {
-    if (refreshPersonalChatsBtn) {
-      setButtonLoading(refreshPersonalChatsBtn, false);
-      refreshPersonalChatsBtn.disabled = false;
+    if (scheduleRefreshBtn) {
+      setButtonLoading(scheduleRefreshBtn, false);
+      scheduleRefreshBtn.disabled = false;
     }
   }
 }
@@ -2724,8 +2826,8 @@ async function loadSendPersonalChats(force = false) {
   if (!sendTargetValuePersonalSuggestions) return;
   if (hasLoadedSendPersonalChats && !force) return;
 
-  if (sendRefreshPersonalChatsBtn) {
-    setButtonLoading(sendRefreshPersonalChatsBtn, true, 'Refreshing chats');
+  if (sendRefreshBtn) {
+    setButtonLoading(sendRefreshBtn, true, 'Refreshing chats');
   }
   setSendPersonalChatHint('Fetching personal chat list...', '#5d645d');
 
@@ -2750,9 +2852,9 @@ async function loadSendPersonalChats(force = false) {
     setSendPersonalChatPickerOptions([]);
     setSendPersonalChatHint(error.message, '#b42318');
   } finally {
-    if (sendRefreshPersonalChatsBtn) {
-      setButtonLoading(sendRefreshPersonalChatsBtn, false);
-      sendRefreshPersonalChatsBtn.disabled = false;
+    if (sendRefreshBtn) {
+      setButtonLoading(sendRefreshBtn, false);
+      sendRefreshBtn.disabled = false;
     }
   }
 }
@@ -2761,7 +2863,7 @@ async function loadGroups(force = false) {
   if (!targetValueGroupSuggestions) return;
   if (hasLoadedGroups && !force) return;
 
-  if (refreshGroupsBtn) setButtonLoading(refreshGroupsBtn, true, 'Refreshing groups');
+  if (scheduleRefreshBtn) setButtonLoading(scheduleRefreshBtn, true, 'Refreshing groups');
   setGroupHint('Fetching group list...', '#5d645d');
 
   try {
@@ -2785,9 +2887,9 @@ async function loadGroups(force = false) {
     setGroupPickerOptions([]);
     setGroupHint(error.message, '#b42318');
   } finally {
-    if (refreshGroupsBtn) {
-      setButtonLoading(refreshGroupsBtn, false);
-      refreshGroupsBtn.disabled = false;
+    if (scheduleRefreshBtn) {
+      setButtonLoading(scheduleRefreshBtn, false);
+      scheduleRefreshBtn.disabled = false;
     }
   }
 }
@@ -2796,7 +2898,7 @@ async function loadSendGroups(force = false) {
   if (!sendTargetValueGroupSuggestions) return;
   if (hasLoadedSendGroups && !force) return;
 
-  if (sendRefreshGroupsBtn) setButtonLoading(sendRefreshGroupsBtn, true, 'Refreshing groups');
+  if (sendRefreshBtn) setButtonLoading(sendRefreshBtn, true, 'Refreshing groups');
   setSendGroupHint('Fetching group list...', '#5d645d');
 
   try {
@@ -2820,9 +2922,9 @@ async function loadSendGroups(force = false) {
     setSendGroupPickerOptions([]);
     setSendGroupHint(error.message, '#b42318');
   } finally {
-    if (sendRefreshGroupsBtn) {
-      setButtonLoading(sendRefreshGroupsBtn, false);
-      sendRefreshGroupsBtn.disabled = false;
+    if (sendRefreshBtn) {
+      setButtonLoading(sendRefreshBtn, false);
+      sendRefreshBtn.disabled = false;
     }
   }
 }
@@ -2848,8 +2950,7 @@ function syncTargetInputContent() {
     targetValueLabel.textContent = 'Group ID (example: 1203630xxxx@g.us)';
     targetHint.textContent = 'You can enter 1203630xxxx only or with @g.us suffix';
     if (targetValueInput) targetValueInput.setAttribute('list', 'targetValueGroupSuggestions');
-    if (refreshGroupsBtn) refreshGroupsBtn.hidden = false;
-    if (refreshPersonalChatsBtn) refreshPersonalChatsBtn.hidden = true;
+    if (scheduleRefreshBtn) scheduleRefreshBtn.textContent = 'Refresh Groups';
     loadGroups();
     return;
   }
@@ -2858,8 +2959,7 @@ function syncTargetInputContent() {
   targetValueLabel.textContent = 'Personal ID / Number (example: 62812xxxx@s.whatsapp.net)';
   targetHint.textContent = 'You can enter phone number only or with @s.whatsapp.net suffix';
   if (targetValueInput) targetValueInput.setAttribute('list', 'targetValuePersonalSuggestions');
-  if (refreshGroupsBtn) refreshGroupsBtn.hidden = true;
-  if (refreshPersonalChatsBtn) refreshPersonalChatsBtn.hidden = false;
+  if (scheduleRefreshBtn) scheduleRefreshBtn.textContent = 'Refresh Chats';
   loadPersonalChats();
 }
 
@@ -2871,8 +2971,8 @@ function syncSendTargetInputContent() {
     sendTargetValueLabel.textContent = 'Group ID (example: 1203630xxxx@g.us)';
     sendTargetHint.textContent = 'You can enter 1203630xxxx only or with @g.us suffix';
     if (sendTargetValueInput) sendTargetValueInput.setAttribute('list', 'sendTargetValueGroupSuggestions');
-    if (sendRefreshGroupsBtn) sendRefreshGroupsBtn.hidden = false;
-    if (sendRefreshPersonalChatsBtn) sendRefreshPersonalChatsBtn.hidden = true;
+    if (sendRefreshBtn) sendRefreshBtn.textContent = 'Refresh Groups';
+    updateSendTargetClearButtonState();
     loadSendGroups();
     return;
   }
@@ -2881,9 +2981,9 @@ function syncSendTargetInputContent() {
   sendTargetValueLabel.textContent = 'Personal ID / Number (example: 62812xxxx@s.whatsapp.net)';
   sendTargetHint.textContent = 'You can enter phone number only or with @s.whatsapp.net suffix';
   if (sendTargetValueInput) sendTargetValueInput.setAttribute('list', 'sendTargetValuePersonalSuggestions');
-  if (sendRefreshGroupsBtn) sendRefreshGroupsBtn.hidden = true;
-  if (sendRefreshPersonalChatsBtn) sendRefreshPersonalChatsBtn.hidden = false;
+  if (sendRefreshBtn) sendRefreshBtn.textContent = 'Refresh Chats';
   loadSendPersonalChats();
+  updateSendTargetClearButtonState();
 }
 
 if (targetTypeInput) {
@@ -2944,31 +3044,69 @@ if (sendTargetValueInput) {
       sendTargetGroupSuggestionMap,
       sendTargetPersonalSuggestionMap
     );
+    updateSendTargetClearButtonState();
   });
 }
 
-if (refreshGroupsBtn) {
-  refreshGroupsBtn.addEventListener('click', () => {
-    loadGroups(true);
+if (sendTargetClearBtn) {
+  sendTargetClearBtn.addEventListener('click', () => {
+    if (sendTargetValueInput) {
+      sendTargetValueInput.value = '';
+      sendTargetValueInput.focus();
+    }
+    updateSendTargetClearButtonState();
   });
 }
 
-if (refreshPersonalChatsBtn) {
-  refreshPersonalChatsBtn.addEventListener('click', () => {
-    loadPersonalChats(true);
+if (scheduleRefreshBtn) {
+  scheduleRefreshBtn.addEventListener('click', () => {
+    if (targetTypeInput?.value === 'group') {
+      loadGroups(true);
+    } else {
+      loadPersonalChats(true);
+    }
   });
 }
 
-if (sendRefreshGroupsBtn) {
-  sendRefreshGroupsBtn.addEventListener('click', () => {
-    loadSendGroups(true);
+if (sendRefreshBtn) {
+  sendRefreshBtn.addEventListener('click', () => {
+    if (sendTargetTypeInput?.value === 'group') {
+      loadSendGroups(true);
+    } else {
+      loadSendPersonalChats(true);
+    }
   });
 }
 
-if (sendRefreshPersonalChatsBtn) {
-  sendRefreshPersonalChatsBtn.addEventListener('click', () => {
-    loadSendPersonalChats(true);
+if (scheduleSelectChatBtn) {
+  scheduleSelectChatBtn.addEventListener('click', () => {
+    openChatSelectorModal({
+      targetTypeSelect: targetTypeInput,
+      targetTypeInput: targetTypeInput,
+      targetValueInput: targetValueInput
+    });
   });
+}
+
+if (sendSelectChatBtn) {
+  sendSelectChatBtn.addEventListener('click', () => {
+    openChatSelectorModal({
+      targetTypeSelect: sendTargetTypeInput,
+      targetTypeInput: null,
+      targetValueInput: sendTargetValueInput
+    });
+  });
+}
+
+if (closeChatSelectorModal) {
+  closeChatSelectorModal.addEventListener('click', closeChatSelectorModalFn);
+}
+
+if (chatSelectorModal) {
+  const backdrop = chatSelectorModal.querySelector('.modal-backdrop');
+  if (backdrop) {
+    backdrop.addEventListener('click', closeChatSelectorModalFn);
+  }
 }
 
 if (sendMediaTypeInput) {

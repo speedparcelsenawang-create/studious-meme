@@ -621,17 +621,15 @@
                       </div>
 
                       <div class="field" id="targetValueField">
-                        <div class="field-head">
-                          <label for="targetValue" id="targetValueLabel">Group ID (example: 1203630xxxx@g.us)</label>
-                          <div class="field-head-actions">
-                            <button type="button" class="btn btn-outline btn-sm" id="refreshGroupsBtn">Refresh Groups</button>
-                            <button type="button" class="btn btn-outline btn-sm" id="refreshPersonalChatsBtn" hidden>Refresh Chats</button>
-                          </div>
-                        </div>
+                        <label for="targetValue" id="targetValueLabel">Group ID (example: 1203630xxxx@g.us)</label>
                         <input id="targetValue" name="targetValue" list="targetValueGroupSuggestions" autocomplete="off" placeholder="Type an ID, or search a name…" required />
                         <datalist id="targetValueGroupSuggestions"></datalist>
                         <datalist id="targetValuePersonalSuggestions"></datalist>
                         <p class="hint" id="targetHint">You can enter 1203630xxxx only or with @g.us suffix</p>
+                        <div class="field-actions">
+                          <button type="button" class="btn btn-outline btn-sm" id="scheduleSelectChatBtn">Select Chat</button>
+                          <button type="button" class="btn btn-outline btn-sm" id="scheduleRefreshBtn">Refresh Groups</button>
+                        </div>
                       </div>
 
                       <hr class="form-divider" />
@@ -744,17 +742,16 @@
                     </div>
 
                     <div class="field" id="sendTargetValueField">
-                      <div class="field-head">
-                        <label for="sendTargetValue" id="sendTargetValueLabel">Group ID (example: 1203630xxxx@g.us)</label>
-                        <div class="field-head-actions">
-                          <button type="button" class="btn btn-outline btn-sm" id="sendRefreshGroupsBtn">Refresh Groups</button>
-                          <button type="button" class="btn btn-outline btn-sm" id="sendRefreshPersonalChatsBtn" hidden>Refresh Chats</button>
-                        </div>
-                      </div>
+                      <label for="sendTargetValue" id="sendTargetValueLabel">Group ID (example: 1203630xxxx@g.us)</label>
                       <input id="sendTargetValue" name="targetValue" list="sendTargetValueGroupSuggestions" autocomplete="off" placeholder="Type an ID, or search a name…" required />
                       <datalist id="sendTargetValueGroupSuggestions"></datalist>
                       <datalist id="sendTargetValuePersonalSuggestions"></datalist>
                       <p class="hint" id="sendTargetHint">You can enter 1203630xxxx only or with @g.us suffix</p>
+                      <div class="field-actions">
+                        <button type="button" class="btn btn-outline btn-sm" id="sendSelectChatBtn">Select Chat</button>
+                        <button type="button" class="btn btn-outline btn-sm" id="sendRefreshBtn">Refresh Groups</button>
+                        <button type="button" class="btn btn-outline btn-sm" id="sendTargetClearBtn">Clear</button>
+                      </div>
                     </div>
 
                     <hr class="form-divider" />
@@ -1638,7 +1635,7 @@
       window.__ACCESS_CONTROL_SETTINGS__ = <%= JSON.stringify(accessControlSettings) %>;
       window.__BUILT_IN_COMMAND_SETTINGS__ = <%= JSON.stringify(builtInCommandSettings) %>;
     </script>
-    <script src="/public/app.js"></script>
+    <script src="/public/app.js" defer></script>
 
     <!-- Deleted Message Viewer Modal -->
     <div class="dm-view-modal-backdrop" id="dmViewModalBackdrop" hidden aria-modal="true" role="dialog" aria-labelledby="dmViewModalTitle">
@@ -1666,6 +1663,29 @@
         <div class="dm-view-modal-footer">
           <div class="dm-view-meta-grid" id="dmViewMetaGrid"></div>
         </div>
+      </div>
+    </div>
+
+    <!-- Chat Selector Modal -->
+    <div class="modal" id="chatSelectorModal" hidden>
+      <div class="modal-backdrop"></div>
+      <div class="modal-panel chat-selector-modal-panel" role="dialog" aria-modal="true" aria-labelledby="chatSelectorModalTitle">
+        <button type="button" class="modal-close" id="closeChatSelectorModal" aria-label="Close chat selector">&times;</button>
+        <h2 class="modal-title" id="chatSelectorModalTitle">Select Chat or Group</h2>
+        <p class="modal-description" id="chatSelectorModalDesc">Choose a chat to auto-fill the field</p>
+        <div class="chat-selector-table-wrap">
+          <table class="chat-selector-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>ID</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="chatSelectorList"></tbody>
+          </table>
+        </div>
+        <p class="chat-selector-feedback" id="chatSelectorFeedback" hidden></p>
       </div>
     </div>
   </body>

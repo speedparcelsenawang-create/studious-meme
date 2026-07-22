@@ -5,16 +5,16 @@ const DATA_DIR = path.join(process.cwd(), '.data');
 const DATA_FILE = path.join(DATA_DIR, 'chat-response-settings.json');
 
 const DEFAULT_SETTINGS = {
-  personalEnabled: true,
-  groupEnabled: true,
+  personalEnabled: false,
+  groupEnabled: false,
   selfCommandEnabled: true,
 };
 
 function normalizeSettings(value) {
   const source = value && typeof value === 'object' ? value : {};
   return {
-    personalEnabled: source.personalEnabled !== false,
-    groupEnabled: source.groupEnabled !== false,
+    personalEnabled: source.personalEnabled === true,
+    groupEnabled: source.groupEnabled === true,
     selfCommandEnabled: source.selfCommandEnabled !== false,
   };
 }
