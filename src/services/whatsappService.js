@@ -1212,22 +1212,6 @@ class WhatsAppService {
         });
       }
 
-      if (text.trim() === '.vv' || text.trim() === '!vv') {
-        await this.handleViewOnceCommand(chatId, content);
-        continue;
-      }
-
-      // Handle image to PDF button responses
-      if (text.trim().startsWith('.imagetopdf_')) {
-        await this.handleImageToPdfButtonResponse(chatId, text.trim());
-        continue;
-      }
-
-      if (text.trim().startsWith('.') || text.trim().startsWith('!')) {
-        const handled = await this.handleBuiltInCommand(chatId, message, content, text);
-        if (handled) continue;
-      }
-
       let matched = customCommandStore.matchCommand(text);
       if (!matched) {
         matched = this.matchInteractiveCommand(interactiveSelectionId);

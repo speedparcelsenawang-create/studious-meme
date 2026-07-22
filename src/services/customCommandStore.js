@@ -8,27 +8,24 @@ const ALLOWED_CATEGORIES = ['General', 'Greeting', 'Info', 'Utility', 'Fun', 'Me
 const ALLOWED_MEDIA_TYPES = ['image', 'video', 'audio', 'document'];
 const DISABLED_TRIGGERS = new Set(['.ytmp3', '.ytmp4', '.facebook', '.instagram', '.fb', '.ig', '!ytmp3', '!ytmp4', '!facebook', '!instagram', '!fb', '!ig']);
 const REMOVED_DEFAULT_TRIGGERS = new Set(['.menuedit', '.editreply', '!menuedit', '!editreply']);
-const DEFAULT_COMMANDS = [
+const LEGACY_BUNDLED_DEFAULT_COMMANDS = [
   {
     trigger: '.alive',
     response: '✅ Bot is alive and running.',
     description: 'Check bot online status quickly',
     category: 'Utility',
-    createdAt: new Date().toISOString(),
   },
   {
     trigger: '.vv',
     response: 'Reply to a view-once image/video message with .vv to reopen the media.',
     description: 'Open quoted view-once media',
     category: 'Utility',
-    createdAt: new Date().toISOString(),
   },
   {
     trigger: '.sticker',
     response: '🧩 Buat sticker. Usage: reply/kirim gambar/video lalu ketik .sticker',
     description: 'Create sticker from image/video',
     category: 'Media',
-    createdAt: new Date().toISOString(),
   },
   {
     trigger: '.menu1',
@@ -44,7 +41,6 @@ const DEFAULT_COMMANDS = [
         }),
       },
     ],
-    createdAt: new Date().toISOString(),
   },
   {
     trigger: '.menucombo',
@@ -78,7 +74,6 @@ const DEFAULT_COMMANDS = [
         }),
       },
     ],
-    createdAt: new Date().toISOString(),
   },
   {
     trigger: '.demobutton',
@@ -117,7 +112,6 @@ const DEFAULT_COMMANDS = [
         }),
       },
     ],
-    createdAt: new Date().toISOString(),
   },
   {
     trigger: '.testbutton',
@@ -133,7 +127,6 @@ const DEFAULT_COMMANDS = [
         }),
       },
     ],
-    createdAt: new Date().toISOString(),
   },
 ];
 
@@ -158,65 +151,41 @@ function persistCommands() {
 
 const commands = loadCommands();
 
-function ensureDefaultCommands() {
-  let changed = false;
-
-  for (const fallback of DEFAULT_COMMANDS) {
-    const key = normalizeTrigger(fallback.trigger);
-    if (!key) continue;
-
-    const existing = commands.find((item) => item.trigger === key);
-    if (!existing) {
-      const entry = {
-        trigger: key,
-        response: String(fallback.response || '').trim(),
-        description: String(fallback.description || '').trim(),
-        category: normalizeCategory(fallback.category),
-        createdAt: fallback.createdAt || new Date().toISOString(),
-      };
-
-      if (Array.isArray(fallback.buttons) && fallback.buttons.length) {
-        entry.buttons = fallback.buttons;
-      }
-
-      commands.push(entry);
-      changed = true;
-      continue;
-    }
-
-    if (key === '.menucombo' || key === '.demobutton') {
-      const desiredButtons = JSON.stringify(fallback.buttons || []);
-      const currentButtons = JSON.stringify(existing.buttons || []);
-      const nextResponse = String(fallback.response || '').trim();
-      const nextDescription = String(fallback.description || '').trim();
-      const nextCategory = normalizeCategory(fallback.category);
-
-      if (existing.response !== nextResponse) {
-        existing.response = nextResponse;
-        changed = true;
-      }
-      if (existing.description !== nextDescription) {
-        existing.description = nextDescription;
-        changed = true;
-      }
-      if (existing.category !== nextCategory) {
-        existing.category = nextCategory;
-        changed = true;
-      }
-      if (currentButtons !== desiredButtons) {
-        existing.buttons = fallback.buttons || [];
-        changed = true;
-      }
-    }
-  }
-
-  if (changed) {
-    persistCommands();
-  }
+function areButtonsEqual(a, b) {
+  return JSON.stringify(Array.isArray(a) ? a : []) === JSON.stringify(Array.isArray(b) ? b : []);
 }
 
-ensureDefaultCommands();
+function isLegacyBundledDefaultCommand(item) {
+  if (!item || typeof item !== 'object') return false;
+
+  const trigger = normalizeStoredTrigger(item.trigger);
+  if (!trigger) return false;
+
+  const matchedDefault = LEGACY_BUNDLED_DEFAULT_COMMANDS.find((entry) => entry.trigger === trigger);
+  if (!matchedDefault) return false;
+
+  const response = String(item.response || '').trim();
+  const description = String(item.description || '').trim();
+  const category = normalizeCategory(item.category);
+
+  if (response !== String(matchedDefault.response || '').trim()) return false;
+  if (description !== String(matchedDefault.description || '').trim()) return false;
+  if (category !== normalizeCategory(matchedDefault.category)) return false;
+
+  return areButtonsEqual(item.buttons, matchedDefault.buttons);
+}
+
+function purgeBundledDefaultCommands() {
+  const kept = commands.filter((item) => !isLegacyBundledDefaultCommand(item));
+  if (kept.length === commands.length) return;
+
+  commands.length = 0;
+  commands.push(...kept);
+  persistCommands();
+}
+
 migrateLegacyTriggers();
+purgeBundledDefaultCommands();
 purgeRemovedDefaultCommands();
 purgeDisabledCommands();
 
